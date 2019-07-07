@@ -7,7 +7,8 @@
     "start": "node index.js",
     "babelPlugin": "npx babel src --out-dir lib --plugins=@babel/plugin-transform-arrow-functions",
     "babelDefaultAllPlugin": "npx babel src --out-dir lib --presets=@babel/env",
-    "babelConfig": "npx babel src --out-dir lib"
+    "babelConfig": "npx babel src --out-dir lib",
+    "buildBabelTest": "npx babel index.js -o plugins/test/test.js -w"
   },
   "dependencies": {
     "@babel/cli": "^7.5.0",

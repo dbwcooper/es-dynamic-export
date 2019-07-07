@@ -121,4 +121,5 @@ export { name1, name2, name3, name4,... }
 
 接下来的工作    
 1. babel 插件能否实现 export { ...Action };
+  export { ...Action } 会报错，无法生成 AST 结构  
 2. webpack 插件能否实现 export { ...Action };
