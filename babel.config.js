@@ -1,5 +1,3 @@
-// env 只会为目标浏览器中没有的功能加载转换插件
-
 const presets = [
     ["@babel/env", {
       "corejs": "3.1.4",
@@ -12,12 +10,15 @@ const presets = [
         safari: "11.1",
         ie: "11"
       },
-      // useBuiltIns: "usage"
+      useBuiltIns: "usage"
     }]
   ];
 
 const plugins = [
-  ["@babel/plugin-proposal-decorators", { "legacy": true }],
+  [
+    "@babel/plugin-proposal-decorators", { "legacy": true },
+    "./plugins/babel-dynamic-export.js"
+  ],
 ];
 
 if (process.env["ENV"] === "prod") {
