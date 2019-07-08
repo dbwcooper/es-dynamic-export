@@ -1,20 +1,9 @@
 import { actionsFactory } from './util';
 
-const actions = [
-    'getDeploymentByNo',
-    'queryCustomer',
-    'saveCustomer',
-    'createCustomer',
-    'getDevicesByOrderNo',
-    'getCustomerAddress',
-    'queryDevices',
-    'initDeployment',
 
+const Actions = actionsFactory([
     'setState',
-    'setTitle',
-    'saveDeployment',
-    'setCustomerInfo',
-    'setCustomerFields'
-]
-export const Actions = actionsFactory(actions, 'home');
-console.log('Actions: ', Actions);
+    'getCustomer',
+], 'home');
+
+console.log('Actionss: ', Actions);

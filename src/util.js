@@ -19,3 +19,7 @@
     })
     return action;
   };
+
+  const action = {
+    name: "tom"
+  }

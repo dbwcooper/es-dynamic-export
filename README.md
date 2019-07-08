@@ -121,5 +121,8 @@ export { name1, name2, name3, name4,... }
 
 接下来的工作    
 1. babel 插件能否实现 export { ...Action };
-  export { ...Action } 会报错，无法生成 AST 结构  
+  export { ...Action } 会报错，无法生成 AST 结构(思路错误)  
+  识别 ``` actionFactory() ``` 这个函数 然后暴露函数内的数组。     
+  另外今晚的收获 找到了这个, babel开发手册 [babel-handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/zh-Hans/plugin-handbook.md)     
+
 2. webpack 插件能否实现 export { ...Action };
