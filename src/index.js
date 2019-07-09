@@ -1,9 +1,9 @@
 import { actionsFactory } from './util';
 
 
-const Actions = actionsFactory([
+export default Actions = actionsFactory([
     'setState',
-    'getCustomer',
+    'getCustomersd',
 ], 'home');
 
 console.log('Actionss: ', Actions);

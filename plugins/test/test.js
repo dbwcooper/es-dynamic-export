@@ -7,13 +7,14 @@ var _a = require("./src/example/a");
 // const getName = require('./src/a')
 var as = 123;
 var ssss = 1222222222223;
-var sss = 1212332;
-var ss2s = 1212332; // const a = getName();
+var sss = 12123322;
+var ss2s = 1212123332;
 
-var func = function func(n) {
-  return n * n;
-};
+function square(n) {
+  return n;
+}
 
+;
 console.log(' b: ', _a.b);
 console.log('ss2s: ', ss2s);
 console.log('sss: ', sss);

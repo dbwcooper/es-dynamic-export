@@ -123,6 +123,13 @@ export { name1, name2, name3, name4,... }
 1. babel 插件能否实现 export { ...Action };
   export { ...Action } 会报错，无法生成 AST 结构(思路错误)  
   识别 ``` actionFactory() ``` 这个函数 然后暴露函数内的数组。     
-  另外今晚的收获 找到了这个, babel开发手册 [babel-handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/zh-Hans/plugin-handbook.md)     
+  另外今晚的收获 找到了这个, babel开发手册 [babel-handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/zh-Hans/plugin-handbook.md)      
+
+  @babel/parser: 将js 代码转义为 ast
+  @babel/traverse: 用于遍历 ast 接口中的节点，再也不用像最开始一样写很多forEach 遍历了。
+  @babel/types: 写插件时 用来进行断言判断的函数， 处理AST 逻辑帮助比较多, 精简代码 
+  @babel/generator: ast to code, 将处理后的 ast 站换为真实的代码。 
+  @babel/template : 方便一些简单的变量名替换。
+
 
 2. webpack 插件能否实现 export { ...Action };
