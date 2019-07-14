@@ -1,29 +1,70 @@
-// import * as parser from "@babel/parser";
-// import traverse from "@babel/traverse";
-const parser = require('@babel/parser'); // js 转义 ast 工具。
-// require default 默认导出 traverse func
+const parser = require('@babel/parser'); // js代码 to  ast
 const traverse = require('@babel/traverse').default;
-const t = require('@babel/types'); // 一些写插件时 用来进行断言判断的函数
-const generate = require('@babel/generator').default; // 一些写插件时 用来进行断言判断的函数
-const template = require('@babel/template').default; // 一些写插件时 用来进行断言判断的函数
+const t = require('@babel/types'); // 进行断言判断的函数
+const generate = require('@babel/generator').default; // ast to js 代码
+const template = require('@babel/template').default; // 
+
+const VISITED = Symbol('visited');
 const code = `
     const arr = ["setState", "getName"];
     const Actions = actionsFactory(arr, 'home');
     export default Actions;
 `;
+
+// const code = `
+//     const arr = ["setState", "getName"];
+//     export default actionsFactory(arr, 'home');
+// `;
+function markVisited(node) {
+    node[VISITED] = true;
+    return node;
+}
+
+// 生成 多个 export const setState = Actions.setState;
+function buildNamedExport(vaiableName, referenceName) {
+    return markVisited(
+        t.exportNamedDeclaration(
+            null,
+            [t.exportSpecifier(t.identifier(vaiableName), t.identifier(referenceName))]
+        )
+    );
+}
+
 const ast = parser.parse(
     code,
-    { sourceType: 'module' } // 支持 export
+    { sourceType: 'module' } // 支持 export/import
 );
 traverse(ast, {
-    enter(path) {
-        // path.node.type === "Identifier" &&
-        // path.node.name === "actionsFactory"
-        if (t.isIdentifier(path.node, { name: "actionsFactory" })) {
-            path.node.name = "x";
+    ExportDefaultDeclaration(path) {
+        const defaultIdentifier = t.identifier('default');
+        const declaration = path.node.declaration;
+        const isIdentifier = t.isIdentifier(declaration); // export default Actions
+        const isCallExpression = t.isCallExpression(declaration);// export default actionsFactory([], name)
+        let binding = '';
+        if(isIdentifier) {
+            binding = path.scope.getBinding(declaration.name);
+        } else if (isCallExpression && declaration.callee.name === 'actionsFactory') {
+            binding = path.scope.getBinding(declaration.callee.name);
         }
-    }
+        path.addComment('leading', ' generate by babel plugin ');
+
+        const newNode = t.exportSpecifier(t.identifier('test'), t.identifier('test'));
+        path.insertAfter(t.expressionStatement(t.stringLiteral("A little high, little low.")))
+        path.insertAfter(newNode)
+
+        const id = declaration.id || path.scope.generateUidIdentifier('default');
+        path.insertAfter(buildNamedExport('Actions.setState', 'setState'))
+
+        // path.replaceWithMultiple([
+        //     declaration,
+        //     buildNamedExport(id, defaultIdentifier)
+        //   ]);
+        // const isImmutable = !binding || ['const', 'module'].includes(binding.kind);
+      }
 });
+
+console.log(generate(ast).code);
+
 const ge = generate(ast, {}, code);
 console.log('ge: ', ge);
 debugger;
@@ -39,36 +80,6 @@ const ast2 = buildRequire({
 const code2 = generate(ast2).code;
 console.log('code2: ', code2);
 debugger;
-
-// const exported = body[body.length - 1];
-// console.log('body: ', body);
-
-// const obj = {};
-// const actionKeys = [];
-// body.forEach(item => {
-//     if(item.type === "ExportNamedDeclaration") {
-//         exported = item;
-//     }
-//     debugger;
-//     if(item.type === "VariableDeclaration" && !!item.declarations.length) {
-//         item.declarations.forEach(itemChild => {
-//             if(itemChild.init
-//                 && itemChild.init.type === "CallExpression"
-//                 && itemChild.init.callee.name === "actionsFactory"
-//             ) {
-//                 itemChild.init.arguments.forEach(element => {
-//                     if(element.type === 'ArrayExpression' && element.elements.length) {
-//                         element.elements.forEach(actionKeyItem => {
-//                             actionKeys.push(actionKeyItem.value); //get all actions key
-//                             console.log('actionKeys: ', actionKeys);
-//                         })
-//                     }
-//                 });
-//             }
-//         })
-//     }
-// });
-// console.log('actionKeys: ', actionKeys)
 
 const updateParamNameVisitor = {
     Identifier(path) {
@@ -93,14 +104,6 @@ function DynamicExport(babel) {
             param.name = "x";
             path.traverse(updateParamNameVisitor, { paramName });
         },
-        // CallExpression(path) {
-        //     const param = path.node.params[0];
-        //     const paramName = param.callee.name;
-        //     param.callee.name = "actionsFactorys"
-        //     path.traverse(visitorCallee, { paramName });
-        // },
-        // ExportNamedDeclaration(path) {
-        // }
     };
     const visitorCallee = {
         Identifier(path) {
@@ -109,15 +112,6 @@ function DynamicExport(babel) {
             }
         }
     }
-    // const traverse = {
-    //     enter(path) {
-    //         if (t.isIdentifier(path.node, { name: "n" })) {
-    //             path.node.name = "x";
-    //         }
-    //     }
-    // }
-    
-    // path.traverse(MyVisitor)
     return { visitor };
 }
   

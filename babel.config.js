@@ -17,6 +17,7 @@ const presets = [
 const plugins = [
   [
     "@babel/plugin-proposal-decorators", { "legacy": true },
+    "./plugins/test/water.js",
     "./plugins/babel-dynamic-export.js"
   ],
 ];

@@ -1,9 +1,13 @@
 import { actionsFactory } from './util';
 
 
-export default Actions = actionsFactory([
+export default actionsFactory([
     'setState',
     'getCustomersd',
 ], 'home');
 
-console.log('Actionss: ', Actions);
+
+const Actions = {
+    name: 'tom'
+}
+export const name = Actions.name;

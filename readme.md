@@ -132,4 +132,10 @@ export { name1, name2, name3, name4,... }
   @babel/template : 方便一些简单的变量名替换。
 
 
+
+AST 接口
+  1. 所有 节点都是继承 `interface Node` 这个接口    
+  2. 一个完整的AST树，最外层是 `interface Program`; 
+  3. 
+
 2. webpack 插件能否实现 export { ...Action };
