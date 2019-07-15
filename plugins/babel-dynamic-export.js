@@ -4,7 +4,7 @@ const t = require('@babel/types'); // 进行断言判断的函数
 const generate = require('@babel/generator').default; // ast to js 代码
 const template = require('@babel/template').default; // 
 
-const VISITED = Symbol('visited');
+const isSymbol = Symbol('symbol');
 const code = `
     const arr = ["setState", "getName"];
     const Actions = actionsFactory(arr, 'home');
@@ -16,19 +16,31 @@ const code = `
 //     export default actionsFactory(arr, 'home');
 // `;
 function markVisited(node) {
-    node[VISITED] = true;
+    node[isSymbol] = true;
     return node;
 }
 
 // 生成 多个 export const setState = Actions.setState;
-function buildNamedExport(vaiableName, referenceName) {
+// arr = ['setState', 'getName'], prefixName = Actions;
+function buildNamedExports(arr, prefixName) {
+    const exportedNames =  arr.map((key) => {
+    // exportSpecifier 必须要两个参数 local,exported;
+    // if local === exported, the result is export { exported }
+    return markVisited(
+        t.exportSpecifier(
+            t.identifier(`${prefixName}.${key}`),
+            t.identifier(key)
+        ));
+    })
     return markVisited(
         t.exportNamedDeclaration(
             null,
-            [t.exportSpecifier(t.identifier(vaiableName), t.identifier(referenceName))]
+            exportedNames
         )
-    );
+    )
 }
+
+
 
 const ast = parser.parse(
     code,
@@ -46,6 +58,7 @@ traverse(ast, {
         } else if (isCallExpression && declaration.callee.name === 'actionsFactory') {
             binding = path.scope.getBinding(declaration.callee.name);
         }
+        // 
         path.addComment('leading', ' generate by babel plugin ');
 
         const newNode = t.exportSpecifier(t.identifier('test'), t.identifier('test'));
@@ -53,7 +66,9 @@ traverse(ast, {
         path.insertAfter(newNode)
 
         const id = declaration.id || path.scope.generateUidIdentifier('default');
-        path.insertAfter(buildNamedExport('Actions.setState', 'setState'))
+        const exportedNames = buildNamedExports(['setState', 'getName'], 'Actions');
+        path.insertAfter(exportedNames)
+        // path.get('body').pushContainer('body', exportedNames);
 
         // path.replaceWithMultiple([
         //     declaration,
@@ -67,7 +82,7 @@ console.log(generate(ast).code);
 
 const ge = generate(ast, {}, code);
 console.log('ge: ', ge);
-debugger;
+
 const buildRequire = template(`
   var IMPORT_NAME = require(SOURCE);
 `);
