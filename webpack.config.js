@@ -1,5 +1,6 @@
 const webpack = require('webpack')
 const path = require('path');
+const webpackPlugin = require('./plugins/webpack.plugin')
 
 module.exports = {
   entry: './lib/example/a.js',
@@ -12,5 +13,8 @@ module.exports = {
     rules: [
       { test: /\.js$/, use: 'babel-loader' }
     ]
-  }
+  },
+  plugins: [
+    // new webpackPlugin({options: true})
+  ]
 };

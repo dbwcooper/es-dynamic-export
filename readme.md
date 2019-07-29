@@ -138,4 +138,34 @@ AST 接口
   2. 一个完整的AST树，最外层是 `interface Program`; 
   3. 
 
+
+
 2. webpack 插件能否实现 export { ...Action };
+
+
+更新思路： 
+1. babel 能做到 很好识别代码片段的语法。
+2. webpack 能即时的更新修改文件。
+
+综合一下:
+1. 用户编写的文件是   
+  ```
+    import { actionsFactory } from 'util.js'
+    const actions = ["setState", "getName"];
+    const actionHelper = actionsFactory(actions, 'home')
+    export default actionHelper;
+  ```
+2. 用户点击保存之后，webpack 插件监听到此事件，将js文件转换为 string
+3. webpack 插件内使用babel 插件写好的函数，将string 转 ast 然后更新代码为
+  ```
+    import { actionsFactory } from 'util.js'
+    const actions = ["setState", "getName"];
+    const actionHelper = actionsFactory(actions, 'home')
+    export default actionHelper;
+
+    export const setState = actionHelper.setState;
+    export const getName = actionHelper.getName;
+    export const actionNames = actionHelper.actionNames;
+  
+  ``` 
+4. 使用webpack 插件内功能 将 babel 插件转换后的代码 (string 字符串) 替换到原js文件中。

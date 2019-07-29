@@ -7,19 +7,39 @@
     <title>Document</title>
 </head>
 <body>
-    <div id="root">
+    <div id="root" style="height: 300px; border:1px solid red; overflow: scroll;">
         root
+        <div style="height: 900px; width: 100%; border:1px solid blue;">
+
+        </div>
+    </div>
+    <div id="root2" style="height: 300px; border:1px solid red; overflow: scroll;">
+        box2
+        <div style="height: 900px; width: 100%; border:1px solid blue;">
+
+        </div>
     </div>
     <script>
-        var exports = {};
-    console.log('name: ', 12)
-    </script>
-    <script src="./lib/index.js" ></script>
-    <script type="text/javascript">
-        console.log('a b: ', b);
-        let root = document.getElementById('root');
-        console.log('root: ', root);
-        root.innerHTML = b
+        
+        const rootDom = document.getElementById('root');
+        let h = parseInt(rootDom.style.height);
+        let scrollHeight = rootDom.scrollTop;
+        let dom1Top = 640; // max = scrollHeight - h 
+        let dom1h = 0;
+
+        rootDom.addEventListener('scroll', (e) => {
+            const dom = e.target;
+            const number = parseInt(dom.scrollTop);
+            dom1h = number;
+        });
+        window.onmousewheel = document.onmousewheel = () => {
+            const dom2 = document.getElementById('root2');
+            if (dom1h === dom1Top) {
+                // 第二个div 开记录始滚动
+                console.log('start scrolling')
+                document.getElementById('root2').scrollTop += 10
+            }
+        };
     </script>
 </body>
 </html>
