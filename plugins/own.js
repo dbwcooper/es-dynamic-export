@@ -10,88 +10,97 @@ function markVisited(node) {
     return node;
 }
 const code = `
-    import { actionsFactory } from 'tila'
+    import { actionsFactory } from 'util'
     const actions = ["setState", "getName"];
-    const actionHelper = actionsFactory(actions, 'home')
+    const actionHelper = actionsFactory(actions, 'home');
     export default actionHelper;
+    const getName = actionHelper.getName;
+    export { getName };
+    export const setState = actionHelper.setState;
 `;
 
-const defaultOpts = {
-    exportDefaultName: 'actionHelper',
-    actionArrayName: 'actions',
-    exportActionName: 'actionNames',
+const exportNamesMap = {
+    "setState": "ActionHelper.setState"
 }
-
-function buildNamedExports(arr, t, options = defaultOpts) {
-    // exportSpecifier 必须要两个参数 local,exported;
-    // export { local as exported }; local === exported ; export { exported }
-    const exportNamedDeclarations = [];
-    arr.forEach((key) => {
-        const declarator = t.variableDeclarator(
-            t.identifier(key),
-            t.identifier(`${options.exportDefaultName}.${key}`)
-        );
-        const declaration = t.variableDeclaration('const', [declarator]);
-
-        const exportNamedDeclaration = t.exportNamedDeclaration(declaration, []);
-        exportNamedDeclarations.push(exportNamedDeclaration)
-    });
+function generatEND(local, exported) {
     const declarator = t.variableDeclarator(
-      t.identifier('actionNames'), t.identifier(`actionHelper.actionNames`)
+        t.identifier(local),
+        t.identifier(exported)
     );
     const declaration = t.variableDeclaration('const', [declarator]);
     const exportNamedDeclaration = t.exportNamedDeclaration(declaration, []);
-    exportNamedDeclarations.push(exportNamedDeclaration);
+    return exportNamedDeclaration;
+}
 
+function buildNamedExports(actionHelperName = 'actionHelper') {
+    // exportSpecifier 必须要两个参数 local,exported;
+    // export { local as exported }; local === exported ; export { exported }
+    const exportNamedDeclarations = [];
+    for (let key in exportNamesMap) {
+        exportNamedDeclarations.push(
+            generatEND(key, exportNamesMap[key])
+        );
+    }
+    exportNamedDeclarations.push(
+        generatEND('actionNames', `${actionHelperName}.actionNames`)
+    );
     return exportNamedDeclarations
 }
 
+
+const visitor = {
+    ArrayExpression: {
+        enter(path, { arrayActionName, actionHelperName }) {
+            // 找到 js 文件顶层作用域上使用到的数组。
+            if(path.scope.bindings[arrayActionName]) {
+                path.node.elements.forEach(item => {
+                    exportNamesMap[item.value] = `${actionHelperName}.${item.value}`;
+                })
+            }
+        }
+    },
+    ExportNamedDeclaration: {
+        enter(path) {
+            let name = null;
+            if(path.node.specifiers && path.node.specifiers.length) {
+                const node = path.node.specifiers[0];
+                name = node.exported.name
+            } else if(path.node.declaration && path.node.declaration.declarations.length) {
+                const node = path.node.declaration.declarations[0];
+                name = node.id.name
+            }
+            // 如果全局作用域内已有此变量定义，则不再导出。
+            if (name && exportNamesMap[name]) {
+                delete exportNamesMap[name];
+            }
+        }
+    }
+}
+
+// 调试。
 const ast = parser.parse(
     code,
     { sourceType: 'module' } // 支持 export/import
 );
 
-const actions = [];
-const nestVisitor = {
-    ArrayExpression: {
-        enter(path, arrayActionName) {
-            // const getBindingIdentifiers = path.getBindingIdentifiers();
-            const bindings = path.scope.bindings;
-            if(bindings[arrayActionName]) {
-                // 判断是否时同一个数组
-                const elements = path.node.elements;
-                elements.forEach(item => {
-                    actions.push(item.value)
-                })
-            }
-        }
-    }
-}
 traverse(ast, {
     CallExpression: {
         enter(path) {
-            if (path.node.callee.name === 'actionsFactory' && path.node.arguments.length && actions.length == 0) {
-                const arrayActionNode = path.node.arguments[0];
-                const arrayActionName = arrayActionNode.name; // actions change there
+            if (path.node.callee.name === 'actionsFactory' && path.node.arguments.length) {
+                const arrayActionName = path.node.arguments[0].name;
+                const identifierName = path.container.id.name;
                 path.findParent((parentPath) => {
                     if(parentPath.type === 'Program') {
-                        parentPath.traverse(nestVisitor, arrayActionName);
+                        parentPath.traverse(visitor, { arrayActionName, actionHelperName: identifierName });
+                        const exporteds = buildNamedExports('actionHelper');
+                        const addAfterNodes = t.program(exporteds, [], 'module')
+                        const resultCode = generate(addAfterNodes).code;
+                        console.log('resultCode: ', resultCode);
+                        parentPath.stop(); // 此ast 树不再遍历。
                     }
                 });
-                console.log('actions: ', actions);
-                const exportedNames = buildNamedExports(actions, t, options = defaultOpts);
-                path.findParent((parentPath) => {
-                    if(parentPath.parent.type === 'Program') {
-                        parentPath.addComment('leading', ' generate by babel plugin ');
-                        parentPath.insertAfter(exportedNames);
-                        // parentPath.insertAfter(t. stringLiteral('/* generate by babel plugin  */'));
-                    }
-                });
-               
             }
         }
     }
 });
-
-const codes = generate(ast).code;
-console.log('codes: ', codes)
+debugger;
