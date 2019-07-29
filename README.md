@@ -136,16 +136,28 @@ export { name1, name2, name3, name4,... }
 AST 接口
   1. 所有 节点都是继承 `interface Node` 这个接口    
   2. 一个完整的AST树，最外层是 `interface Program`; 
-  3. 
-
 
 
 2. webpack 插件能否实现 export { ...Action };
 
 
-更新思路： 
-1. babel 能做到 很好识别代码片段的语法。
-2. webpack 能即时的更新修改文件。
+最终结果
+1. 此插件的最终结果是将  
+    ```
+    const actionHelper = actionFactory(['setState', 'getState'], 'homeRoute');
+    export default actionHelper;
+    ```   
+    转化为    
+    ```
+    const actionHelper = actionFactory(['setState', 'getState'], 'homeRoute');
+    export default actionHelper;
+    export const actionNames = actionHelper.actionNames;
+    export const setState = actionHelper.setState;
+    export const getState = actionHelper.getState;
+    ```     
+    babel 能做到 很好识别代码片段的语法。   
+    webpack 能即时的更新修改文件。
+
 
 综合一下:
 1. 用户编写的文件是   

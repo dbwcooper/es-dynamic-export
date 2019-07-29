@@ -14,7 +14,7 @@ class webpackPlugin {
     }
     compiler.hooks.afterCompile.tap("copyPluginAfterCompile", function (compilation) {
       if(needWatch) {
-        const actionPath = path.resolve(context, './src/action/');
+        const actionPath = path.resolve(context, './src/actions/');
         const watchActions = chokidar.watch(actionPath);
         // const log = console.log.bind(console);
         watchActions.on('change', (path) => {
